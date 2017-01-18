@@ -15,12 +15,12 @@
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
-x64/
-x86/
+[Xx]64/
+[Xx]86/
+[Bb]uild/
 bld/
 [Bb]in/
 [Oo]bj/
-[Ll]og/
 
 # Visual Studio 2015 cache/options directory
 .vs/
@@ -175,6 +175,8 @@ AppPackages/
 BundleArtifacts/
 Package.StoreAssociation.xml
 _pkginfo.txt
+# Microsoft Azure ApplicationInsights config file
+ApplicationInsights.config
 
 # Visual Studio cache files
 # files ending in .cache can be ignored
@@ -184,6 +186,7 @@ _pkginfo.txt
 
 # Others
 ClientBin/
+[Ss]tyle[Cc]op.*
 ~$*
 *~
 *.dbmdl
@@ -250,3 +253,9 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+# LightSwitch generated files
+GeneratedArtifacts/
+ModelManifest.xml
+
+# FAKE - F# Make
+.fake/
