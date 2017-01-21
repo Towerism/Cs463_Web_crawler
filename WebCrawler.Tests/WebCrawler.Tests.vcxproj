@@ -147,6 +147,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Tests\ResponseParserTests.cpp" />
     <ClCompile Include="Tests\UrlParserTests.cpp" />
   </ItemGroup>
   <ItemGroup>

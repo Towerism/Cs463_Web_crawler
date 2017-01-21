@@ -24,7 +24,13 @@
     <ClInclude Include="Sources\UrlParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\networking.h">
+    <ClInclude Include="Sources\common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\Networking.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\ResponseParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -32,7 +38,10 @@
     <ClCompile Include="Sources\UrlParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\networking.cpp">
+    <ClCompile Include="Sources\Networking.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\ResponseParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

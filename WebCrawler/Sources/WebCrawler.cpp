@@ -17,25 +17,30 @@ void print_usage()
 
 int main(int argc, char* argv[])
 {
-  if (argc < 2) {
+  if (argc < 2)
+  {
     print_usage();
     return 1;
   }
   std::string url(argv[1]);
+  printf("URL: %s\n", url.c_str());
   UrlParser urlParser;
   auto parseResult = std::unique_ptr<UrlParseResult>(urlParser.Parse(url));
-  
-  if (!parseResult->Success) {
+
+  if (!parseResult->Success)
+  {
     print_usage();
     return 1;
   }
   if (Networking::InitWinsock() != 0)
     return 1;
 
+  Networking::DNS::printDNSServer();
   auto header = Networking::ConnectToUrl(parseResult->Host, parseResult->Port, parseResult->Request);
+  printf("\n-------------------------------------\n");
   printf(header.c_str());
 
   Networking::DeInitWinsock();
-  
+
   return 0;
 }

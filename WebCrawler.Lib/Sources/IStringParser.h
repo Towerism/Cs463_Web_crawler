@@ -5,6 +5,7 @@
 #pragma once
 
 #include "ParseResultBase.h"
+#include <string>
 
 class IStringParser
 {

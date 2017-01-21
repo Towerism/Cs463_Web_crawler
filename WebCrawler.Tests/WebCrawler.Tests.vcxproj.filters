@@ -27,5 +27,8 @@
     <ClCompile Include="Tests\UrlParserTests.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
+    <ClCompile Include="Tests\ResponseParserTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
