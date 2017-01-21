@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <winsock2.h>
 #include <string>
 #include <sstream>
@@ -130,7 +129,7 @@ namespace Networking
     std::ostringstream requestStream;
     requestStream << "HEAD " << request << " HTTP/1.0\r\n"
       << "Host: " << host << "\r\n"
-      << "User-agent: " << USER_AGENT_STRING
+      << "User-agent: " << USER_AGENT_STRING << "\r\n"
       << "Connection: close\r\n"
       << "\r\n";
     auto headRequest = requestStream.str().c_str();
