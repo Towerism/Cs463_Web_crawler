@@ -6,6 +6,7 @@
 #include <iostream>
 #include <memory>
 #include "UrlParser.h"
+#include "Networking.h"
 
 void print_usage()
 {
@@ -28,5 +29,13 @@ int main(int argc, char* argv[])
     print_usage();
     return 1;
   }
+  if (Networking::InitWinsock() != 0)
+    return 1;
+
+  auto header = Networking::ConnectToUrl(parseResult->Host, parseResult->Port, parseResult->Request);
+  printf(header.c_str());
+
+  Networking::DeInitWinsock();
+  
   return 0;
 }

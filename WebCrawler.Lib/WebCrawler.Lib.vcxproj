@@ -142,12 +142,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="IStringParser.h" />
-    <ClInclude Include="ParseResultBase.h" />
-    <ClInclude Include="UrlParser.h" />
+    <ClInclude Include="Sources\IStringParser.h" />
+    <ClInclude Include="Sources\Networking.h" />
+    <ClInclude Include="Sources\ParseResultBase.h" />
+    <ClInclude Include="Sources\UrlParser.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="UrlParser.cpp" />
+    <ClCompile Include="Sources\UrlParser.cpp" />
+    <ClCompile Include="Sources\Networking.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

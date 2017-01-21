@@ -15,18 +15,24 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="UrlParser.h">
+    <ClInclude Include="Sources\IStringParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ParseResultBase.h">
+    <ClInclude Include="Sources\ParseResultBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="IStringParser.h">
+    <ClInclude Include="Sources\UrlParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\networking.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="UrlParser.cpp">
+    <ClCompile Include="Sources\UrlParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\networking.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

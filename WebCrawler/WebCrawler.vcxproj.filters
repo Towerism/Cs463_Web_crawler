@@ -27,12 +27,15 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WebCrawler.cpp">
+    <ClCompile Include="Sources\WebCrawler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

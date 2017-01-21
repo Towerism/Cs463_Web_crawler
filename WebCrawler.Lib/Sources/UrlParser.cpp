@@ -1,4 +1,8 @@
-﻿#include "UrlParser.h"
+﻿// File: UrlParser.cpp
+// Martin Fracker
+// CSCE 463-500 Spring 2017
+
+#include "UrlParser.h"
 
 // http:///Host[:port][/path][?query][#fragment]
 // match[0] is the whole url
@@ -9,7 +13,7 @@
 // match[5] is the path
 // match[6] is the query
 // match[7] is the fragment
-std::regex UrlParser::url_regex = std::regex("http:\\/\\/(\\.?[^:?#/]*)(:(\\d*))?((\\/[^\\?#]*)*(\\?[^#]*)?)(#.*)?");
+std::regex UrlParser::url_regex = std::regex(R"(http://(\.?[^:?#/]*)(:(\d*))?((\/[^\?#]*)*(\?[^#]*)?)(#.*)?)");
 
 UrlParseResult* UrlParser::Parse(std::string url)
 {

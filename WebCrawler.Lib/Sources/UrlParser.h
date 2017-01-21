@@ -1,7 +1,9 @@
 ﻿// File: UrlParser.h
 // Martin Fracker
 // CSCE 463-500 Spring 2017
+
 #pragma once
+
 #include <regex>
 #include "ParseResultBase.h"
 #include "IStringParser.h"
