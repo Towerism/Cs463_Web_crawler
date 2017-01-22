@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 
+#include <signal.h>
 #include <winsock2.h>
 #include <string>
 #include <sstream>
@@ -15,6 +16,7 @@
 #include "HTMLParserBase.h"
 #include <memory>
 #include <iostream>
+#include <functional>
 
 #define RESPONSE_CHUNK_SIZE 100
 #define USER_AGENT_STRING "Cs463WebCrawler/1.1"
@@ -108,7 +110,6 @@ namespace Networking
       if ((remote = gethostbyname(str)) == NULL)
       {
         printf("failed with invalid url\n");
-        closesocket(sock);
         std::exit(EXIT_FAILURE);
       }
       else // take the first IP address and copy into sin_addr
@@ -128,7 +129,6 @@ namespace Networking
     if (connect(sock, (struct sockaddr*) &server, sizeof(struct sockaddr_in)) == SOCKET_ERROR)
     {
       printf("failed with :w%d\n", WSAGetLastError());
-      closesocket(sock);
       std::exit(EXIT_FAILURE);
     }
 
@@ -154,13 +154,14 @@ namespace Networking
     fd_set readfds;
     int selection;
     TIMEVAL timeout;
+    timeout.tv_sec = RESPONSE_TIMEOUT;
+    timeout.tv_usec = 0;
     do
     {
       char responseChunkBuffer[RESPONSE_CHUNK_SIZE];
       FD_ZERO(&readfds);
       FD_SET(sock, &readfds);
-      timeout.tv_sec = RESPONSE_TIMEOUT;
-      selection = select(0, &readfds, nullptr, nullptr, nullptr);
+      selection = select(0, &readfds, nullptr, nullptr, &timeout);
       if (selection < 0)
       {
         printf("failed with %d on select\n", errno);
@@ -170,12 +171,14 @@ namespace Networking
         responseLength = recv(sock, responseChunkBuffer, RESPONSE_CHUNK_SIZE, 0);
         if (responseLength < 0) {
           printf("failed with %d on recv\n", errno);
-          closesocket(sock);
           std::exit(EXIT_FAILURE);
         }
-        auto time = timeGetTime() - t;
         auto responseChunk = std::string(responseChunkBuffer, responseLength);
         responseStream << responseChunk;
+      } else
+      {
+        printf("response timed out\n");
+        std::exit(EXIT_FAILURE);
       }
     }
     while (responseLength > 0);
@@ -185,7 +188,6 @@ namespace Networking
     if (!responseParseResult->Success)
     {
       printf("failed with non-HTTP header\n");
-      closesocket(sock);
       std::exit(EXIT_FAILURE);
     }
     printf("done in %d ms with %d bytes\n", timeGetTime() - t, response.length());
