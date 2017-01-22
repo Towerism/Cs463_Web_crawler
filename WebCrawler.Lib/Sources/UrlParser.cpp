@@ -25,6 +25,10 @@ UrlParseResult* UrlParser::Parse(std::string url)
     result->Port = stoi(match_results[3]);
   if (match_results[4].length() > 0)
     result->Request = match_results[4];
-  printf("\t  Parsing URL... host %s, port %d, request %s\n", result->Host.c_str(), result->Port, result->Request.c_str());
+  printf("\t  Parsing URL... ");
+  if (result->Success)
+    printf("host %s, port %d, request %s\n", result->Host.c_str(), result->Port, result->Request.c_str());
+  else
+    printf("failed with invalid scheme or port\n");
   return result;
 }

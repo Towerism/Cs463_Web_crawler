@@ -11,7 +11,6 @@ class ResponseParseResult : public ParseResultBase
 public:
   std::string Header;
   int StatusCode = 0;
-  int ContentLength = 0;
   std::string Content;
 };
 

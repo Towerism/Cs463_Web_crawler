@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include <string>
+#include "ResponseParser.h"
 
 namespace Networking
 {
@@ -19,5 +20,5 @@ namespace Networking
 
   void DeInitWinsock();
 
-  std::string ConnectToUrl(std::string host, int port, std::string request);
+  ResponseParseResult ConnectToUrl(std::string host, int port, std::string request);
 }

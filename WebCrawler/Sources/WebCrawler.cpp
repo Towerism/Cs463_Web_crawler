@@ -4,9 +4,11 @@
 
 #include "stdafx.h"
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include "UrlParser.h"
 #include "Networking.h"
+#include "HTMLParserBase.h"
 
 void print_usage()
 {
@@ -25,9 +27,9 @@ int main(int argc, char* argv[])
   std::string url(argv[1]);
   printf("URL: %s\n", url.c_str());
   UrlParser urlParser;
-  auto parseResult = std::unique_ptr<UrlParseResult>(urlParser.Parse(url));
+  auto urlParseResult = std::unique_ptr<UrlParseResult>(urlParser.Parse(url));
 
-  if (!parseResult->Success)
+  if (!urlParseResult->Success)
   {
     print_usage();
     return 1;
@@ -36,9 +38,9 @@ int main(int argc, char* argv[])
     return 1;
 
   Networking::DNS::printDNSServer();
-  auto header = Networking::ConnectToUrl(parseResult->Host, parseResult->Port, parseResult->Request);
+  auto responseParseResult = Networking::ConnectToUrl(urlParseResult->Host, urlParseResult->Port, urlParseResult->Request);
   printf("\n-------------------------------------\n");
-  printf(header.c_str());
+  std::cout << responseParseResult.Header;
 
   Networking::DeInitWinsock();
 

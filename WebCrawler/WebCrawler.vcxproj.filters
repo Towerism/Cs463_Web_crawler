@@ -36,4 +36,10 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Library Include="HTMLParser_debug_win32.lib" />
+    <Library Include="HTMLParser_debug_x64.lib" />
+    <Library Include="HTMLParser_release_win32.lib" />
+    <Library Include="HTMLParser_release_x64.lib" />
+  </ItemGroup>
 </Project>

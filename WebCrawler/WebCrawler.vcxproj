@@ -95,6 +95,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>ws2_32.lib;winmm.lib;Iphlpapi.lib;Psapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)/bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -164,6 +165,12 @@
     <ProjectReference Include="..\WebCrawler.Lib\WebCrawler.Lib.vcxproj">
       <Project>{af4a4463-a723-4b4c-a8cb-a8163dacb340}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="HTMLParser_debug_win32.lib" />
+    <Library Include="HTMLParser_debug_x64.lib" />
+    <Library Include="HTMLParser_release_win32.lib" />
+    <Library Include="HTMLParser_release_x64.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

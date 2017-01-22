@@ -143,6 +143,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Sources\common.h" />
+    <ClInclude Include="Sources\HTMLParserBase.h" />
     <ClInclude Include="Sources\IStringParser.h" />
     <ClInclude Include="Sources\Networking.h" />
     <ClInclude Include="Sources\ParseResultBase.h" />
