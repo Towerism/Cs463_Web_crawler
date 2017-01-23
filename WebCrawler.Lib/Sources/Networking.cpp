@@ -194,7 +194,7 @@ namespace Networking
 
     // parse for links
     printf("\t  Verifying header... status code %d\n", responseParseResult->StatusCode);
-    if (responseParseResult->StatusCode == 200) {
+    if (responseParseResult->StatusCode >= 200 && responseParseResult->StatusCode < 300) {
       printf("\t+ Parsing page... ");
       t = timeGetTime();
       HTMLParserBase htmlParser;
