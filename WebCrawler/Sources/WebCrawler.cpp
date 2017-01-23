@@ -8,7 +8,6 @@
 #include <memory>
 #include "UrlParser.h"
 #include "Networking.h"
-#include "HTMLParserBase.h"
 
 void print_usage()
 {

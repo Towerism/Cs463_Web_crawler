@@ -28,7 +28,7 @@
       <Filter>Tests</Filter>
     </ClCompile>
     <ClCompile Include="Tests\ResponseParserTests.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Tests</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
