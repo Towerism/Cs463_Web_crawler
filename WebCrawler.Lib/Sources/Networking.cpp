@@ -1,6 +1,7 @@
-/* winsock.cpp
+/* Networking.cpp
  * CPSC 463 Sample Code
  * by Dmitri Loguinov
+ * Modified by martin Fracker
  */
 
 #include <stdio.h>
@@ -21,6 +22,11 @@
 #define RESPONSE_CHUNK_SIZE 100
 #define USER_AGENT_STRING "Cs463WebCrawler/1.1"
 #define RESPONSE_TIMEOUT 10
+#define DOWNLOAD_TIMEOUT 10
+#define MAX_PAGE_SIZE 2097152
+#define MAX_PAGE_SIZE_ROBOTS 16384
+#define REQUEST_GET "GET"
+#define REQUEST_HEAD "HEAD"
 
 namespace Networking
 {
@@ -46,10 +52,11 @@ namespace Networking
     WSACleanup();
   }
 
+  std::unordered_set<std::string> DNS::SeenHosts;
+  std::unordered_set<DWORD> DNS::SeenIps;
+
   void DNS::printDNSServer(void)
   {
-    printf("\t  Doing DNS... ");
-    DWORD t = timeGetTime();
     // MSDN sample code
     FIXED_INFO* FixedInfo;
     ULONG ulOutBufLen;
@@ -71,19 +78,48 @@ namespace Networking
       printf("failed with %08x\n", dwRetVal);
       std::exit(EXIT_FAILURE);
     }
-    else
-    {
-      printf("done in %d ms, found %s\n", timeGetTime() - t, FixedInfo->DnsServerList.IpAddress.String);
-    }
 
     GlobalFree(FixedInfo);
   }
 
-  ResponseParseResult ConnectToUrl(std::string host, int port, std::string request)
+  bool DNS::MarkHostAsSeen(std::string host)
   {
-    // string pointing to an HTTP server (DNS name or IP)
-    auto str = host.c_str();
+    printf("\t  Checking host uniqueness... ");
+    int prevSize = SeenHosts.size();
+    SeenHosts.insert(host);
+    bool unique = prevSize < SeenHosts.size();
+    if (unique)
+    {
+      printf("passed\n");
+    }
+    else
+    {
+      printf("failed\n");
+    }
+    return unique;
+  }
 
+  bool DNS::MarkIpAsSeen(DWORD ip)
+  {
+    printf("\t  Checking ip uniqueness... ");
+    int prevSize = SeenIps.size();
+    SeenIps.insert(ip);
+    bool unique = prevSize < SeenIps.size();
+    if (unique)
+    {
+      printf("passed\n");
+    }
+    else
+    {
+      printf("failed\n");
+    }
+    return unique;
+  }
+
+
+  // if response family is 2, then any response matching 2xx is successful, if 4 -> 4xx, if 5 -> 5xx, etc.
+  std::shared_ptr<ResponseParseResult> RequestAndVerifyHeader(std::string message, std::string verb, std::string host, std::string request, sockaddr_in server, int successfulResponseFamily, int maxDownload)
+  {
     // open a TCP socket
     SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock == INVALID_SOCKET)
@@ -91,50 +127,23 @@ namespace Networking
       printf("socket() generated error %d\n", WSAGetLastError());
       WSACleanup();
       closesocket(sock);
-      std::exit(EXIT_FAILURE);
+      return false;
     }
 
-    // structure used in DNS lookups
-    struct hostent* remote;
-
-    // structure for connecting to server
-    struct sockaddr_in server;
-
-    printf("\t* Connecting on page... ");
+    std::shared_ptr<ResponseParseResult> badParseResult(new ResponseParseResult);
+    badParseResult->Success = false;
+    printf(message.c_str());
     DWORD t = timeGetTime();
-    // first assume that the string is an IP address
-    DWORD IP = inet_addr(str);
-    if (IP == INADDR_NONE)
-    {
-      // if not a valid IP, then do a DNS lookup
-      if ((remote = gethostbyname(str)) == NULL)
-      {
-        printf("failed with invalid url\n");
-        std::exit(EXIT_FAILURE);
-      }
-      else // take the first IP address and copy into sin_addr
-        memcpy((char *)&(server.sin_addr), remote->h_addr, remote->h_length);
-    }
-    else
-    {
-      // if a valid IP, directly drop its binary version into sin_addr
-      server.sin_addr.S_un.S_addr = IP;
-    }
-
-    // setup the port # and protocol type
-    server.sin_family = AF_INET;
-    server.sin_port = htons(port); // host-to-network flips the byte order
-
     // connect to the server on port 80
     if (connect(sock, (struct sockaddr*) &server, sizeof(struct sockaddr_in)) == SOCKET_ERROR)
     {
       printf("failed with :w%d\n", WSAGetLastError());
-      std::exit(EXIT_FAILURE);
+      return badParseResult;
     }
 
-    // build HEAD request
+    // build GET request
     std::ostringstream requestStream;
-    requestStream << "GET " << request << " HTTP/1.0\r\n"
+    requestStream << verb << " " << request << " HTTP/1.0\r\n"
       << "Host: " << host << "\r\n"
       << "User-agent: " << USER_AGENT_STRING << "\r\n"
       << "Connection: close\r\n"
@@ -151,11 +160,13 @@ namespace Networking
     t = timeGetTime();
     std::ostringstream responseStream;
     int responseLength;
+    int totalLength = 0;
     fd_set readfds;
     int selection;
     TIMEVAL timeout;
     timeout.tv_sec = RESPONSE_TIMEOUT;
     timeout.tv_usec = 0;
+    int elapsedTime;
     do
     {
       char responseChunkBuffer[RESPONSE_CHUNK_SIZE];
@@ -165,36 +176,126 @@ namespace Networking
       if (selection < 0)
       {
         printf("failed with %d on select\n", errno);
-        std::exit(EXIT_FAILURE);
+        closesocket(sock);
+        return badParseResult;
       }
-      if (FD_ISSET(sock, &readfds)) {
+      if (FD_ISSET(sock, &readfds))
+      {
         responseLength = recv(sock, responseChunkBuffer, RESPONSE_CHUNK_SIZE, 0);
-        if (responseLength < 0) {
+        if (responseLength < 0)
+        {
           printf("failed with %d on recv\n", errno);
-          std::exit(EXIT_FAILURE);
+          closesocket(sock);
+          return badParseResult;
+        }
+        elapsedTime = timeGetTime() - t;
+        if (responseLength > 0 && elapsedTime / 1000 > DOWNLOAD_TIMEOUT)
+        {
+          printf("failed with slow download\n");
+          closesocket(sock);
+          return badParseResult;
         }
         auto responseChunk = std::string(responseChunkBuffer, responseLength);
         responseStream << responseChunk;
-      } else
+      }
+      else
       {
         printf("response timed out\n");
-        std::exit(EXIT_FAILURE);
+        closesocket(sock);
+        return badParseResult;
+      }
+      totalLength += responseLength;
+      if (totalLength > maxDownload)
+      {
+        printf("failed with exceeding max\n");
+        closesocket(sock);
+        return badParseResult;
       }
     }
     while (responseLength > 0);
     auto response = responseStream.str();
     ResponseParser responseParser;
-    auto responseParseResult = std::unique_ptr<ResponseParseResult>(responseParser.Parse(response));
+    auto responseParseResult = std::shared_ptr<ResponseParseResult>(responseParser.Parse(response));
     if (!responseParseResult->Success)
     {
       printf("failed with non-HTTP header\n");
-      std::exit(EXIT_FAILURE);
+      closesocket(sock);
+      return badParseResult;
     }
     printf("done in %d ms with %d bytes\n", timeGetTime() - t, response.length());
 
     // parse for links
     printf("\t  Verifying header... status code %d\n", responseParseResult->StatusCode);
-    if (responseParseResult->StatusCode >= 200 && responseParseResult->StatusCode < 300) {
+    int responseFloor = successfulResponseFamily * 100;
+    int responseCeiling = responseFloor + 100;
+    if (responseParseResult->StatusCode >= responseFloor && responseParseResult->StatusCode < responseCeiling)
+    {
+      closesocket(sock);
+      return responseParseResult;
+    }
+    closesocket(sock);
+    return badParseResult;
+  }
+
+  bool ConnectToUrl(std::string host, int port, std::string request)
+  {
+    // string pointing to an HTTP server (DNS name or IP)
+    auto str = host.c_str();
+
+    if (!DNS::MarkHostAsSeen(host))
+    {
+      return false;
+    }
+
+    DNS::printDNSServer();
+
+    // structure used in DNS lookups
+    struct hostent* remote;
+
+    // structure for connecting to server
+    struct sockaddr_in server;
+    DWORD IP = inet_addr(str);
+    DWORD t;
+    // first assume that the string is an IP address
+    if (IP == INADDR_NONE)
+    {
+      printf("\t  Doing DNS... ");
+      t = timeGetTime();
+      // if not a valid IP, then do a DNS lookup
+      if ((remote = gethostbyname(str)) == NULL)
+      {
+        printf("failed with unresolved name\n");
+        return false;
+      }
+      // take the first IP address and copy into sin_addr
+      memcpy((char *)&(server.sin_addr), remote->h_addr, remote->h_length);
+      std::string ip = inet_ntoa(server.sin_addr);
+      printf("done in %d ms, found %s\n", timeGetTime() - t, ip.c_str());
+    }
+    else
+    {
+      // if a valid IP, directly drop its binary version into sin_addr
+      server.sin_addr.S_un.S_addr = IP;
+    }
+    if (!DNS::MarkIpAsSeen(server.sin_addr.S_un.S_addr))
+    {
+      return false;
+    }
+
+    // setup the port # and protocol type
+    server.sin_family = AF_INET;
+    server.sin_port = htons(port); // host-to-network flips the byte order
+
+    std::shared_ptr<ResponseParseResult> robotsParseResult;
+    robotsParseResult = RequestAndVerifyHeader("\t  Connecting on robots... ", REQUEST_HEAD, host, "/robots.txt", server, 4, MAX_PAGE_SIZE_ROBOTS);
+    if (!robotsParseResult->Success)
+      return false;
+
+    std::shared_ptr<ResponseParseResult> responseParseResult;
+    responseParseResult = RequestAndVerifyHeader("\t* Connecting on page... ", REQUEST_GET, host, request, server, 2, MAX_PAGE_SIZE);
+
+    if (responseParseResult->Success)
+    {
       printf("\t+ Parsing page... ");
       t = timeGetTime();
       HTMLParserBase htmlParser;
@@ -211,10 +312,9 @@ namespace Networking
       delete[] content;
       delete[] baseUrl;
     }
+    if (responseParseResult->Header != "")
+      printf("\n----------------------------------------------------------------\n%s", responseParseResult->Header.c_str());
 
-    // close the socket to this server; open again for the next one
-    closesocket(sock);
-
-    return *responseParseResult;
+    return true;
   }
 }

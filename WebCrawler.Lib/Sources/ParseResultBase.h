@@ -1,4 +1,4 @@
-﻿// File: UrlParseResult.h
+﻿// File: ParseResultBase.h
 // Martin Fracker
 // CSCE 463-500 Spring 2017
 #pragma once

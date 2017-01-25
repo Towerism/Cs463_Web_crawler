@@ -1,4 +1,7 @@
-﻿#include "ResponseParser.h"
+﻿// File: ResponseParser.cpp
+// Martin Fracker
+// CSCE 463-500 Spring 2017
+#include "ResponseParser.h"
 
 // Used regex101.com to build this regex and visualize the match.
 std::regex ResponseParser::response_regex = std::regex(R"((HTTP\/1.(0|1)\s*(\d{3})[\s\S]*?\r\n\s*\r\n)([\s\S]*)?)");

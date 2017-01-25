@@ -1,4 +1,4 @@
-﻿// File: IUrlValidator.h
+﻿// File: IStringParser.h
 // Martin Fracker
 // CSCE 463-500 Spring 2017
 
