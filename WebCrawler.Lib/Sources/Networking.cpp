@@ -20,7 +20,7 @@
 #include <functional>
 
 #define RESPONSE_CHUNK_SIZE 100
-#define USER_AGENT_STRING "Cs463WebCrawler/1.1"
+#define USER_AGENT_STRING "Cs463WebCrawler/1.2"
 #define RESPONSE_TIMEOUT 10
 #define DOWNLOAD_TIMEOUT 10
 #define MAX_PAGE_SIZE 2097152
