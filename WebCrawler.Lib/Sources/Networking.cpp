@@ -120,6 +120,9 @@ namespace Networking
   // if response family is 2, then any response matching 2xx is successful, if 4 -> 4xx, if 5 -> 5xx, etc.
   std::shared_ptr<ResponseParseResult> RequestAndVerifyHeader(std::string message, std::string verb, std::string host, std::string request, sockaddr_in server, int successfulResponseFamily, int maxDownload)
   {
+    std::shared_ptr<ResponseParseResult> badParseResult(new ResponseParseResult);
+    badParseResult->Success = false;
+
     // open a TCP socket
     SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock == INVALID_SOCKET)
@@ -127,17 +130,14 @@ namespace Networking
       printf("socket() generated error %d\n", WSAGetLastError());
       WSACleanup();
       closesocket(sock);
-      return false;
+      return badParseResult;
     }
-
-    std::shared_ptr<ResponseParseResult> badParseResult(new ResponseParseResult);
-    badParseResult->Success = false;
     printf(message.c_str());
     DWORD t = timeGetTime();
     // connect to the server on port 80
     if (connect(sock, (struct sockaddr*) &server, sizeof(struct sockaddr_in)) == SOCKET_ERROR)
     {
-      printf("failed with :w%d\n", WSAGetLastError());
+      printf("failed with %d on connect\n", WSAGetLastError());
       return badParseResult;
     }
 
@@ -312,8 +312,6 @@ namespace Networking
       delete[] content;
       delete[] baseUrl;
     }
-    if (responseParseResult->Header != "")
-      printf("\n----------------------------------------------------------------\n%s", responseParseResult->Header.c_str());
 
     return true;
   }

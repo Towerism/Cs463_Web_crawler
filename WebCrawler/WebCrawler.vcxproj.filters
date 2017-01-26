@@ -17,6 +17,7 @@
   <ItemGroup>
     <Text Include="ReadMe.txt" />
     <Text Include="URL-input-100.txt" />
+    <Text Include="URL-input-1M.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
