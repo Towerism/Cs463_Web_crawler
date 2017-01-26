@@ -6,7 +6,7 @@
 class ParseResultBase
 {
 public:
-  bool Success;
+  bool Success = false;
 
   virtual ~ParseResultBase() = default;
 };

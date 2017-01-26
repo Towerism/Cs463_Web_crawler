@@ -116,21 +116,23 @@ namespace Networking
     return unique;
   }
 
+  std::shared_ptr<ResponseParseResult> badParseResult(new ResponseParseResult);
+  std::shared_ptr<ResponseParseResult> CloseSocketAndReturnBadParseResult(int socket)
+  {
+    closesocket(socket);
+    return badParseResult;
+  }
 
   // if response family is 2, then any response matching 2xx is successful, if 4 -> 4xx, if 5 -> 5xx, etc.
   std::shared_ptr<ResponseParseResult> RequestAndVerifyHeader(std::string message, std::string verb, std::string host, std::string request, sockaddr_in server, int successfulResponseFamily, int maxDownload)
   {
-    std::shared_ptr<ResponseParseResult> badParseResult(new ResponseParseResult);
-    badParseResult->Success = false;
-
     // open a TCP socket
     SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock == INVALID_SOCKET)
     {
       printf("socket() generated error %d\n", WSAGetLastError());
       WSACleanup();
-      closesocket(sock);
-      return badParseResult;
+      return CloseSocketAndReturnBadParseResult(sock);
     }
     printf(message.c_str());
     DWORD t = timeGetTime();
@@ -138,7 +140,7 @@ namespace Networking
     if (connect(sock, (struct sockaddr*) &server, sizeof(struct sockaddr_in)) == SOCKET_ERROR)
     {
       printf("failed with %d on connect\n", WSAGetLastError());
-      return badParseResult;
+      return CloseSocketAndReturnBadParseResult(sock);
     }
 
     // build GET request
@@ -176,8 +178,7 @@ namespace Networking
       if (selection < 0)
       {
         printf("failed with %d on select\n", errno);
-        closesocket(sock);
-        return badParseResult;
+        return CloseSocketAndReturnBadParseResult(sock);
       }
       if (FD_ISSET(sock, &readfds))
       {
@@ -185,15 +186,13 @@ namespace Networking
         if (responseLength < 0)
         {
           printf("failed with %d on recv\n", errno);
-          closesocket(sock);
-          return badParseResult;
+          return CloseSocketAndReturnBadParseResult(sock);
         }
         elapsedTime = timeGetTime() - t;
         if (responseLength > 0 && elapsedTime / 1000 > DOWNLOAD_TIMEOUT)
         {
           printf("failed with slow download\n");
-          closesocket(sock);
-          return badParseResult;
+          return CloseSocketAndReturnBadParseResult(sock);
         }
         auto responseChunk = std::string(responseChunkBuffer, responseLength);
         responseStream << responseChunk;
@@ -201,15 +200,13 @@ namespace Networking
       else
       {
         printf("response timed out\n");
-        closesocket(sock);
-        return badParseResult;
+        return CloseSocketAndReturnBadParseResult(sock);
       }
       totalLength += responseLength;
       if (totalLength > maxDownload)
       {
         printf("failed with exceeding max\n");
-        closesocket(sock);
-        return badParseResult;
+        return CloseSocketAndReturnBadParseResult(sock);
       }
     }
     while (responseLength > 0);
@@ -219,8 +216,7 @@ namespace Networking
     if (!responseParseResult->Success)
     {
       printf("failed with non-HTTP header\n");
-      closesocket(sock);
-      return badParseResult;
+      return CloseSocketAndReturnBadParseResult(sock);
     }
     printf("done in %d ms with %d bytes\n", timeGetTime() - t, response.length());
 
@@ -233,8 +229,7 @@ namespace Networking
       closesocket(sock);
       return responseParseResult;
     }
-    closesocket(sock);
-    return badParseResult;
+    return CloseSocketAndReturnBadParseResult(sock);
   }
 
   bool ConnectToUrl(std::string host, int port, std::string request)
