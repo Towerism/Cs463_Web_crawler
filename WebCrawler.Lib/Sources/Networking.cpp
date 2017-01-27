@@ -124,6 +124,7 @@ namespace Networking
   }
 
   // if response family is 2, then any response matching 2xx is successful, if 4 -> 4xx, if 5 -> 5xx, etc.
+  // dumps a copy of the header into header pointer if nullptr is not passed
   std::shared_ptr<ResponseParseResult> RequestAndVerifyHeader(std::string message, std::string verb, std::string host, std::string request, sockaddr_in server, int successfulResponseFamily, int maxDownload)
   {
     // open a TCP socket
@@ -229,10 +230,13 @@ namespace Networking
       closesocket(sock);
       return responseParseResult;
     }
+    // this line only matters for single threaded basic operation mode
+    badParseResult->Header = responseParseResult->Header;
     return CloseSocketAndReturnBadParseResult(sock);
   }
 
-  bool ConnectToUrl(std::string host, int port, std::string request)
+  // dumps a copy of the page header into header pointer if nullptr is not passed
+  bool ConnectToUrl(std::string host, int port, std::string request, std::string* header)
   {
     // string pointing to an HTTP server (DNS name or IP)
     auto str = host.c_str();
@@ -281,13 +285,17 @@ namespace Networking
     server.sin_family = AF_INET;
     server.sin_port = htons(port); // host-to-network flips the byte order
 
-    std::shared_ptr<ResponseParseResult> robotsParseResult;
-    robotsParseResult = RequestAndVerifyHeader("\t  Connecting on robots... ", REQUEST_HEAD, host, "/robots.txt", server, 4, MAX_PAGE_SIZE_ROBOTS);
-    if (!robotsParseResult->Success)
-      return false;
+    if (header == nullptr) {
+      std::shared_ptr<ResponseParseResult> robotsParseResult;
+      robotsParseResult = RequestAndVerifyHeader("\t  Connecting on robots... ", REQUEST_HEAD, host, "/robots.txt", server, 4, MAX_PAGE_SIZE_ROBOTS);
+      if (!robotsParseResult->Success)
+        return false;
+    }
 
     std::shared_ptr<ResponseParseResult> responseParseResult;
     responseParseResult = RequestAndVerifyHeader("\t* Connecting on page... ", REQUEST_GET, host, request, server, 2, MAX_PAGE_SIZE);
+    if (header != nullptr)
+      header->replace(0, std::string::npos, responseParseResult->Header);
 
     if (responseParseResult->Success)
     {

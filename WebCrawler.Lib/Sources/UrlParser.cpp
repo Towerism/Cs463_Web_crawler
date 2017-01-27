@@ -4,7 +4,7 @@
 
 #include "UrlParser.h"
 
-// http:///Host[:port][/path][?query][#fragment]
+// http://Host[:port][/path][?query][#fragment]
 // match[0] is the whole url
 // match[1] is the Host
 // match[2] is the port including colon

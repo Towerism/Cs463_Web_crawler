@@ -31,5 +31,5 @@ namespace Networking
 
   void DeInitWinsock();
 
-  bool ConnectToUrl(std::string host, int port, std::string request);
+  bool ConnectToUrl(std::string host, int port, std::string request, std::string* header = nullptr);
 }
