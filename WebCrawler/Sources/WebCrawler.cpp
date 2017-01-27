@@ -46,9 +46,13 @@ std::unique_ptr<Arguments> parseArguments(int argc, char* argv[])
     print_usage();
     return nullptr;
   }
-  int nThreads;
   try {
     arguments->NThreads = std::stoi(argv[1]);
+	if (arguments->NThreads != 1)
+	{
+		print_usage();
+		return nullptr;
+	}
   } catch (std::exception) {
     arguments->Url = argv[1];
     return std::unique_ptr<Arguments>(arguments);
@@ -65,6 +69,8 @@ std::unique_ptr<Arguments> parseArguments(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
   auto arguments = parseArguments(argc, argv);
+  if (nullptr == arguments)
+	  return 1;
   bool basicOperation = arguments->Url != "";
   std::ifstream urlFile(arguments->FileName);
   if (Networking::InitWinsock() != 0)
