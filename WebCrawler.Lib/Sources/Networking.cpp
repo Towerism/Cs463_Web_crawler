@@ -235,7 +235,9 @@ namespace Networking
     return CloseSocketAndReturnBadParseResult(sock);
   }
 
-  // dumps a copy of the page header into header pointer if nullptr is not passed
+  // dumps a copy of the page header into header pointer if nullptr is not passed.
+  // assumes that if header is not null, then we are in basic execution of not checking uniqueness
+  // and printing the header from the response.
   bool ConnectToUrl(std::string host, int port, std::string request, std::string* header)
   {
     // string pointing to an HTTP server (DNS name or IP)
