@@ -175,7 +175,7 @@ namespace Networking
       char responseChunkBuffer[RESPONSE_CHUNK_SIZE];
       FD_ZERO(&readfds);
       FD_SET(sock, &readfds);
-      selection = select(0, &readfds, nullptr, nullptr, &timeout);
+      selection = select(sock + 1, &readfds, nullptr, nullptr, &timeout);
       if (selection < 0)
       {
         printf("failed with %d on select\n", errno);
@@ -241,7 +241,7 @@ namespace Networking
     // string pointing to an HTTP server (DNS name or IP)
     auto str = host.c_str();
 
-    if (!DNS::MarkHostAsSeen(host))
+    if (!header && !DNS::MarkHostAsSeen(host))
     {
       return false;
     }
@@ -276,7 +276,7 @@ namespace Networking
       // if a valid IP, directly drop its binary version into sin_addr
       server.sin_addr.S_un.S_addr = IP;
     }
-    if (!DNS::MarkIpAsSeen(server.sin_addr.S_un.S_addr))
+    if (!header && !DNS::MarkIpAsSeen(server.sin_addr.S_un.S_addr))
     {
       return false;
     }
@@ -285,7 +285,7 @@ namespace Networking
     server.sin_family = AF_INET;
     server.sin_port = htons(port); // host-to-network flips the byte order
 
-    if (header == nullptr) {
+    if (!header) {
       std::shared_ptr<ResponseParseResult> robotsParseResult;
       robotsParseResult = RequestAndVerifyHeader("\t  Connecting on robots... ", REQUEST_HEAD, host, "/robots.txt", server, 4, MAX_PAGE_SIZE_ROBOTS);
       if (!robotsParseResult->Success)
@@ -294,7 +294,7 @@ namespace Networking
 
     std::shared_ptr<ResponseParseResult> responseParseResult;
     responseParseResult = RequestAndVerifyHeader("\t* Connecting on page... ", REQUEST_GET, host, request, server, 2, MAX_PAGE_SIZE);
-    if (header != nullptr)
+    if (header)
       header->replace(0, std::string::npos, responseParseResult->Header);
 
     if (responseParseResult->Success)
