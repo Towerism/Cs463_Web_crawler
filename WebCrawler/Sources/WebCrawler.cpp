@@ -10,11 +10,18 @@
 #include "UrlParser.h"
 #include "Networking.h"
 #include <unordered_set>
+#include <queue>
+#include <mutex>
+
+namespace SharedData
+{
+  std::queue<std::string> urls;
+  std::mutex mutex;
+};
 
 void print_usage()
 {
   std::cout << "Usage: WebCrawler [<threads> <textfile>]|<url>\n\n";
-  std::cout << "\tAnything other than 1 thread is not currently supported.\n";
   std::cout << "\tValid url pattern: http://Host[:port][/path][?query][#fragment]\n";
 }
 
@@ -38,7 +45,37 @@ struct Arguments
   std::string FileName;
 };
 
-std::unique_ptr<Arguments> parseArguments(int argc, char* argv[])
+void collectUrlsToCrawl(std::ifstream& urlFile, std::shared_ptr<Arguments> arguments)
+{
+  std::string url;
+  while (true)
+  {
+    std::getline(urlFile, url);
+    if (urlFile.eof() || !urlFile)
+      break;
+    SharedData::mutex.lock();
+    SharedData::urls.push(url);
+    SharedData::mutex.unlock();
+  }
+}
+
+void crawlUrls()
+{
+  while (true)
+  {
+    SharedData::mutex.lock();
+    if (SharedData::urls.size() == 0)
+    {
+      SharedData::mutex.unlock();
+      break;
+    }
+    auto url = SharedData::urls.front(); SharedData::urls.pop();
+    SharedData::mutex.unlock();
+    crawlUrl(url);
+  }
+}
+
+std::shared_ptr<Arguments> parseArguments(int argc, char* argv[])
 {
   auto arguments = new Arguments;
   if (argc < 2 || argc > 3)
@@ -48,22 +85,12 @@ std::unique_ptr<Arguments> parseArguments(int argc, char* argv[])
   }
   try {
     arguments->NThreads = std::stoi(argv[1]);
-	if (arguments->NThreads != 1)
-	{
-		print_usage();
-		return nullptr;
-	}
   } catch (std::exception) {
     arguments->Url = argv[1];
-    return std::unique_ptr<Arguments>(arguments);
-  }
-  if (arguments->NThreads != 1)
-  {
-    print_usage();
-    return nullptr;
+    return std::shared_ptr<Arguments>(arguments);
   }
   arguments->FileName = argv[2];
-  return std::unique_ptr<Arguments>(arguments);
+  return std::shared_ptr<Arguments>(arguments);
 }
 
 int main(int argc, char* argv[])
@@ -88,19 +115,26 @@ int main(int argc, char* argv[])
     std::cout << "File " << arguments->FileName << " does not exist." << std::endl;
     return 1;
   }
-  std::string line;
-  std::vector<std::string> urls;
-  while (true)
+
+  std::vector<std::thread> consumerThreads;
+
+  printf("Collecting urls to crawl... ");
+  // Collect urls
+  collectUrlsToCrawl(urlFile, arguments);
+  
+  printf("done\n");
+
+  printf("spawning threads...\n");
+  // spawn consumer threads
+  for (int i = 0; i < arguments->NThreads; ++i)
   {
-    std::getline(urlFile, line);
-    if (urlFile.eof())
-      break;
-    urls.push_back(line);
+    consumerThreads.push_back(std::thread(crawlUrls));
   }
 
-  for (auto url : urls)
+  // wait for threads to exit
+  for (auto& thread : consumerThreads)
   {
-    crawlUrl(url);
+    thread.join();
   }
 
   Networking::DeInitWinsock();

@@ -169,3 +169,13 @@ TEST_F(UrlParserTests, ParseReturnsTrueForStraySlash)
   EXPECT_EQ("?query=1/bash", result->Request);
   EXPECT_EQ(80, result->Port);
 }
+
+TEST_F(UrlParserTests, ParseReturnsTrueForTerribleUrl)
+{
+  auto result = target.Parse("http://adserver.adtechus.com/addyn/3.0/5214.1/3229440/0/-1/ADTECH;loc=100;alias=thestar.com_news_canada_134x156_1;size=134x156;kvcalais=lawyer:suzanne_c_t_:suzanne_c_t:quebec:taxation:taxation_in_the_united_states:tax_deduction:;kvng=revenu_qu_bec:suzanne_c_t_:supreme_court_of_canada:clothing_expenses:tax_law:;key=;rdclick=");
+  EXPECT_TRUE(result->Success);
+  EXPECT_EQ("adserver.adtechus.com", result->Host);
+  EXPECT_EQ("/addyn/3.0/5214.1/3229440/0/-1/ADTECH;loc=100;alias=thestar.com_news_canada_134x156_1;size=134x156;kvcalais=lawyer:suzanne_c_t_:suzanne_c_t:quebec:taxation:taxation_in_the_united_states:tax_deduction:;kvng=revenu_qu_bec:suzanne_c_t_:supreme_court_of_canada:clothing_expenses:tax_law:;key=;rdclick=", result->Request);
+  EXPECT_EQ(80, result->Port);
+}
+
