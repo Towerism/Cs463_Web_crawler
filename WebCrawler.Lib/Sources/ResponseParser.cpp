@@ -9,6 +9,8 @@ std::regex ResponseParser::response_regex = std::regex(R"((HTTP\/1.(0|1)\s*(\d{3
 ResponseParseResult* ResponseParser::Parse(std::string response)
 {
   auto result = new ResponseParseResult;
+  if (response.length() > 2000)
+    return result;
   std::smatch match_results;
   result->Success = std::regex_match(response, match_results, response_regex);
   if (!result->Success)
