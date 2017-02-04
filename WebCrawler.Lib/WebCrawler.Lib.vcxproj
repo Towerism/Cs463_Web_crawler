@@ -150,11 +150,13 @@
     <ClInclude Include="Sources\Networking.h" />
     <ClInclude Include="Sources\ParseResultBase.h" />
     <ClInclude Include="Sources\ResponseParser.h" />
+    <ClInclude Include="Sources\Stats.h" />
     <ClInclude Include="Sources\UrlParser.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\Networking.cpp" />
     <ClCompile Include="Sources\ResponseParser.cpp" />
+    <ClCompile Include="Sources\Stats.cpp" />
     <ClCompile Include="Sources\UrlParser.cpp" />
   </ItemGroup>
   <ItemGroup>

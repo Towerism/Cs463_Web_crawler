@@ -36,6 +36,9 @@
     <ClInclude Include="Sources\HTMLParserBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\Stats.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\UrlParser.cpp">
@@ -45,6 +48,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Sources\ResponseParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Stats.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

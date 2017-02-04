@@ -19,6 +19,7 @@
 #include <iostream>
 #include <functional>
 #include <mutex>
+#include "Stats.h"
 
 #define RESPONSE_CHUNK_SIZE_INITIAL 100
 #define USER_AGENT_STRING "Cs463WebCrawler/1.2"
@@ -96,6 +97,7 @@ namespace Networking
     if (unique)
     {
       //printf("passed\n");
+      SharedData::Stats::incrementUniqueUrls();
     }
     else
     {
@@ -115,6 +117,7 @@ namespace Networking
     if (unique)
     {
       //printf("passed\n");
+      SharedData::Stats::incrementUniqueIps();
     }
     else
     {
@@ -280,6 +283,7 @@ namespace Networking
         //printf("failed with unresolved name\n");
         return false;
       }
+      SharedData::Stats::incrementDnsLookups();
       // take the first IP address and copy into sin_addr
       memcpy((char *)&(server.sin_addr), remote->h_addr, remote->h_length);
       std::string ip = inet_ntoa(server.sin_addr);
@@ -305,6 +309,7 @@ namespace Networking
       if (!robotsParseResult->Success)
         return false;
     }
+    SharedData::Stats::incrementNonRobotUrls();
 
     std::shared_ptr<ResponseParseResult> responseParseResult;
     responseParseResult = RequestAndVerifyHeader("\t* Connecting on page... ", REQUEST_GET, host, request, server, 2, MAX_PAGE_SIZE);
@@ -313,6 +318,7 @@ namespace Networking
 
     if (responseParseResult->Success)
     {
+      SharedData::Stats::incrementCrawledUrls();
       //printf("\t+ Parsing page... ");
       t = timeGetTime();
       HTMLParserBase htmlParser;
@@ -325,6 +331,7 @@ namespace Networking
       strcpy(baseUrl, httpHost.c_str());
       htmlParser.Parse(content, contentLength, baseUrl, httpHost.length(), &linkCount);
       linkCount = max(linkCount, 0);
+      SharedData::Stats::incrementLinksFoundBy(linkCount);
       //printf("done in %d ms with %d links\n", timeGetTime() - t, linkCount);
       delete[] content;
       delete[] baseUrl;
