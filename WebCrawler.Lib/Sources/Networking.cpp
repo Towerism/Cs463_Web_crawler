@@ -20,7 +20,7 @@
 #include <functional>
 #include <mutex>
 
-#define RESPONSE_CHUNK_SIZE 100
+#define RESPONSE_CHUNK_SIZE_INITIAL 100
 #define USER_AGENT_STRING "Cs463WebCrawler/1.2"
 #define RESPONSE_TIMEOUT 10
 #define DOWNLOAD_TIMEOUT 10
@@ -170,6 +170,7 @@ namespace Networking
     t = timeGetTime();
     std::ostringstream responseStream;
     int responseLength;
+    size_t responseChunkSize = 100;
     int totalLength = 0;
     fd_set readfds;
     int selection;
@@ -179,7 +180,7 @@ namespace Networking
     int elapsedTime;
     do
     {
-      char responseChunkBuffer[RESPONSE_CHUNK_SIZE];
+      char* responseChunkBuffer = new char[responseChunkSize];
       FD_ZERO(&readfds);
       FD_SET(sock, &readfds);
       selection = select(sock + 1, &readfds, nullptr, nullptr, &timeout);
@@ -190,7 +191,7 @@ namespace Networking
       }
       if (FD_ISSET(sock, &readfds))
       {
-        responseLength = recv(sock, responseChunkBuffer, RESPONSE_CHUNK_SIZE, 0);
+        responseLength = recv(sock, responseChunkBuffer, responseChunkSize, 0);
         if (responseLength < 0)
         {
           //printf("failed with %d on recv\n", errno);
@@ -202,8 +203,11 @@ namespace Networking
           //printf("failed with slow download\n");
           return CloseSocketAndReturnBadParseResult(sock);
         }
-        auto responseChunk = std::string(responseChunkBuffer, responseLength);
-        responseStream << responseChunk;
+        if (responseLength > 0) {
+          auto responseChunk = std::string(responseChunkBuffer, responseLength);
+          responseStream << responseChunk;
+          responseChunkSize += responseLength;
+        }
       }
       else
       {
@@ -216,6 +220,7 @@ namespace Networking
         //printf("failed with exceeding max\n");
         return CloseSocketAndReturnBadParseResult(sock);
       }
+      delete[] responseChunkBuffer;
     }
     while (responseLength > 0);
     auto response = responseStream.str();
