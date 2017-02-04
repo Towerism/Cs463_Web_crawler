@@ -10,6 +10,9 @@
 #include "ResponseParser.h"
 #include <unordered_set>
 
+#define MAX_PAGE_SIZE 2097152
+#define MAX_PAGE_SIZE_ROBOTS 16384
+
 namespace Networking
 {
   class DNS

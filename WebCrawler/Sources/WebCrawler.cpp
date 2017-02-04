@@ -9,9 +9,15 @@
 #include <fstream>
 #include "UrlParser.h"
 #include "Networking.h"
+#include "Stats.h"
 #include <unordered_set>
 #include <queue>
 #include <mutex>
+#include <atomic>
+#include <windows.h>
+#include "printing.h"
+
+#define BYTES_PER_MEGABYTE 1048576
 
 namespace SharedData
 {
@@ -28,14 +34,30 @@ void print_usage()
 // returns whether the url was crawled successfully, dumping a possibly existent header if nullptr is not passed
 bool crawlUrl(std::string url, std::string* header = nullptr)
 {
-  printf("URL: %s\n", url.c_str());
   UrlParser urlParser;
+  printIfNoStats("URL: %s\n", url.c_str());
   auto urlParseResult = std::unique_ptr<UrlParseResult>(urlParser.Parse(url));
 
   if (!urlParseResult->Success)
     return false;
 
-  return Networking::ConnectToUrl(urlParseResult->Host, urlParseResult->Port, urlParseResult->Request, header);
+  auto result = Networking::ConnectToUrl(urlParseResult->Host, urlParseResult->Port, urlParseResult->Request, header);
+  return result;
+}
+
+void reportStats()
+{
+  using namespace SharedData::Stats;
+  int t = timeGetTime();
+  do {
+    using namespace std::chrono_literals;
+    SharedData::mutex.lock();
+    pendingUrls(SharedData::urls.size());
+    SharedData::mutex.unlock();
+    printf("[%3d] %4d Q %6d E %7d H %6d D %6d I %5d R %5d C %5d L %4d\n", elapsedTime(), aliveThreads(), pendingUrls(), extractedUrls(), uniqueUrls(), dnsLookups(), uniqueIps(), nonRobotUrls(), crawledUrls(), linksFound());
+    std::this_thread::sleep_for(2s);
+    elapsedTime((timeGetTime() - t) / 1000);
+  } while (trackStats());
 }
 
 struct Arguments
@@ -70,9 +92,11 @@ void crawlUrls()
       break;
     }
     auto url = SharedData::urls.front(); SharedData::urls.pop();
+    SharedData::Stats::incrementExtractedUrls();
     SharedData::mutex.unlock();
     crawlUrl(url);
   }
+  SharedData::Stats::decrementAliveThreads();
 }
 
 std::shared_ptr<Arguments> parseArguments(int argc, char* argv[])
@@ -105,6 +129,7 @@ int main(int argc, char* argv[])
   if (basicOperation)
   {
     std::string header;
+    SharedData::Stats::trackStats(false);
     auto success = crawlUrl(arguments->Url, &header);
     if (success)
       std::cout << "\n------------------------------------------\n" << header;
@@ -118,17 +143,17 @@ int main(int argc, char* argv[])
 
   std::vector<std::thread> consumerThreads;
 
-  printf("Collecting urls to crawl... ");
   // Collect urls
   collectUrlsToCrawl(urlFile, arguments);
-  
-  printf("done\n");
 
-  printf("spawning threads...\n");
+  // start stats thread
+  std::thread(reportStats).detach();
+
   // spawn consumer threads
   for (int i = 0; i < arguments->NThreads; ++i)
   {
     consumerThreads.push_back(std::thread(crawlUrls));
+    SharedData::Stats::incrementAliveThreads();
   }
 
   // wait for threads to exit
@@ -136,8 +161,17 @@ int main(int argc, char* argv[])
   {
     thread.join();
   }
+  SharedData::Stats::trackStats(false);
 
   Networking::DeInitWinsock();
+
+  using namespace SharedData::Stats;
+  printf("Extracted %d URLs @ %.1f/s\n", extractedUrls(), double(extractedUrls()) / elapsedTime());
+  printf("Looked up %d DNS names @ %.1f/s\n", dnsLookups(), double(dnsLookups()) / elapsedTime());
+  printf("Downloaded %d robots @ %.1f/s\n", nonRobotUrls(), double(nonRobotUrls()) / elapsedTime());
+  printf("Crawled %d pages @ %.1f/s (%.2f MB)\n", crawledUrls(), double(crawledUrls()) / elapsedTime(), double(crawledUrlsSize()) / BYTES_PER_MEGABYTE);
+  printf("Parsed %d links @ %.1f/s\n", linksFound(), double(linksFound()) / elapsedTime());
+  printf("HTTP codes: 2xx = %d, 3xx = %d, 4xx = %d, 5xx = %d, other = %d\n", responses2xx(), responses3xx(), responses4xx(), responses5xx(), responsesOther());
 
   return 0;
 }
