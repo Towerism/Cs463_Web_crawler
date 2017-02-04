@@ -20,7 +20,13 @@ namespace SharedData
     int uniqueIps();
     int nonRobotUrls();
     int crawledUrls();
+    int crawledUrlsSize();
     int linksFound();
+    int responses2xx();
+    int responses3xx();
+    int responses4xx();
+    int responses5xx();
+    int responsesOther();
     bool trackStats();
 
     // setters
@@ -34,7 +40,13 @@ namespace SharedData
     void incrementUniqueIps();
     void incrementNonRobotUrls();
     void incrementCrawledUrls();
+    void incrementCrawledUrlsSizeBy(int amount);
     void incrementLinksFoundBy(int amount);
+    void incrementResponses2xx();
+    void incrementResponses3xx();
+    void incrementResponses4xx();
+    void incrementResponses5xx();
+    void incrementResponsesOther();
     void trackStats(bool set);
   };
 };

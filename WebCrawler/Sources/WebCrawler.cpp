@@ -15,6 +15,9 @@
 #include <mutex>
 #include <atomic>
 #include <windows.h>
+#include "printing.h"
+
+#define BYTES_PER_MEGABYTE 1048576
 
 namespace SharedData
 {
@@ -32,6 +35,7 @@ void print_usage()
 bool crawlUrl(std::string url, std::string* header = nullptr)
 {
   UrlParser urlParser;
+  printIfNoStats("URL: %s\n", url.c_str());
   auto urlParseResult = std::unique_ptr<UrlParseResult>(urlParser.Parse(url));
 
   if (!urlParseResult->Success)
@@ -160,6 +164,14 @@ int main(int argc, char* argv[])
   SharedData::Stats::trackStats(false);
 
   Networking::DeInitWinsock();
+
+  using namespace SharedData::Stats;
+  printf("Extracted %d URLs @ %.1f/s\n", extractedUrls(), double(extractedUrls()) / elapsedTime());
+  printf("Looked up %d DNS names @ %.1f/s\n", dnsLookups(), double(dnsLookups()) / elapsedTime());
+  printf("Downloaded %d robots @ %.1f/s\n", nonRobotUrls(), double(nonRobotUrls()) / elapsedTime());
+  printf("Crawled %d pages @ %.1f/s (%.2f MB)\n", crawledUrls(), double(crawledUrls()) / elapsedTime(), double(crawledUrlsSize()) / BYTES_PER_MEGABYTE);
+  printf("Parsed %d links @ %.1f/s\n", linksFound(), double(linksFound()) / elapsedTime());
+  printf("HTTP codes: 2xx = %d, 3xx = %d, 4xx = %d, 5xx = %d, other = %d\n", 0, 0, 0, 0, 0);
 
   return 0;
 }
