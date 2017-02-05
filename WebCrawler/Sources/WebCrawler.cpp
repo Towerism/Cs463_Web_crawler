@@ -171,7 +171,7 @@ int main(int argc, char* argv[])
   printf("Downloaded %d robots @ %.1f/s\n", nonRobotUrls(), double(nonRobotUrls()) / elapsedTime());
   printf("Crawled %d pages @ %.1f/s (%.2f MB)\n", crawledUrls(), double(crawledUrls()) / elapsedTime(), double(crawledUrlsSize()) / BYTES_PER_MEGABYTE);
   printf("Parsed %d links @ %.1f/s\n", linksFound(), double(linksFound()) / elapsedTime());
-  printf("HTTP codes: 2xx = %d, 3xx = %d, 4xx = %d, 5xx = %d, other = %d\n", 0, 0, 0, 0, 0);
+  printf("HTTP codes: 2xx = %d, 3xx = %d, 4xx = %d, 5xx = %d, other = %d\n", responses2xx(), responses3xx(), responses4xx(), responses5xx(), responsesOther());
 
   return 0;
 }

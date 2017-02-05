@@ -247,6 +247,7 @@ namespace Networking
     }
     // this line only matters for single threaded basic operation mode
     badParseResult->Header = responseParseResult->Header;
+    badParseResult->StatusCode = responseParseResult->StatusCode;
     return CloseSocketAndReturnBadParseResult(sock);
   }
 
@@ -315,6 +316,23 @@ namespace Networking
     responseParseResult = RequestAndVerifyHeader("\t* Connecting on page... ", REQUEST_GET, host, request, server, 2, MAX_PAGE_SIZE);
     if (header)
       header->replace(0, std::string::npos, responseParseResult->Header);
+    auto statusCode = responseParseResult->StatusCode;
+    if (statusCode >= 200 && statusCode < 300)
+    {
+      SharedData::Stats::incrementResponses2xx();
+    } else if (statusCode >= 300 && statusCode < 400)
+    {
+      SharedData::Stats::incrementResponses3xx();
+    } else if (statusCode >= 400 && statusCode < 500)
+    {
+      SharedData::Stats::incrementResponses4xx();
+    } else if (statusCode >= 500 && statusCode < 600)
+    {
+      SharedData::Stats::incrementResponses5xx();
+    } else if (statusCode > 0)
+    {
+      SharedData::Stats::incrementResponsesOther();
+    }
 
     if (responseParseResult->Success)
     {
