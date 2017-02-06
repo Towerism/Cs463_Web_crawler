@@ -10,10 +10,6 @@ std::regex ResponseParser::response_regex = std::regex(R"((HTTP\/1.(0|1)\s*(\d{3
 ResponseParseResult* ResponseParser::Parse(std::string response)
 {
   auto result = new ResponseParseResult;
-  if (response.length() > MAX_PAGE_SIZE) {
-    result->Success = false;
-    return result;
-  }
   std::smatch match_results;
   result->Success = std::regex_search(response, match_results, response_regex);
   if (!result->Success)
