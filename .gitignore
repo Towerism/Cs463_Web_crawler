@@ -259,3 +259,5 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+*.pdf
+*.tex
