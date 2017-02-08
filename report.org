@@ -642,4 +642,14 @@ HTTP codes: 2xx = 12153, 3xx = 3132, 4xx = 2294, 5xx = 135, other = 1
 The average number of links per crawled page is $586486/9452$, or about $62$. If
 google's web graph contains 1T links, then assuming a graph stored as an
 adjacency list storing each url as a 64-bit ($8$ byte) hash, that web graph
-would take up $8\times62\times1T=4.96\times10^{14}$ bytes of space.
+would take up $8\times62\times1\text{T}=4.96\times10^{14}$ bytes of space.
+* Analysis of Required Bandwidth
+The average page size of the crawled pages is $311.74 \text{ MB}/9452=34583$
+bytes. So to crawl 10B pages a day, Yahoo would require
+$\dfrac{34583\times10\text{B}}{24\text{ hr}\times3600\text{ s}/\text{hr}} =
+4002662037.04$ bps, or about 4 Gbps, of bandwidth.
+* Probability Analysis
+The probability that a link in the input file has a unique host is estimated by
+$139300/1000003$, or about $13.9\%$. The probability for a unique host to have valid DNS record is
+estimated by $83433/139300$, or about $59.9\%$. The percentage of contacted
+sites that had a 4xx robots file is given by $9452/57072$, or about $16.6\%$.
