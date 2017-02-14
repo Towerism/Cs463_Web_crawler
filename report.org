@@ -13,6 +13,8 @@ thread is busy crawling urls from the input file, and one other thread is
 collecting statistics and printing them to the screen. Once all of the crawler
 threads exit, the main process signals the stats thread to terminate, and then
 finally prints a summary of all the statistics gathered.
+
+I did not utilize a very good separation of concerns. The program had very different execution paths depending on the command line arguments that were passed to it. This would have lended itself very to well to a carefully designed architecture that took advantage of dependency injection. Instead the architecture I went with essentially uses global variables for stats printing, and several parameters need to get passed around in order for me to determine if I have to print verbose crawling output or stats output.
 * 1M Url Trace
 #+BEGIN_EXAMPLE
 [  0]    0 Q 1000003 E       0 H      0 D      0 I     0 R     0 C     0 L    0
